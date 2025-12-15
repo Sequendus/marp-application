@@ -6,3 +6,4 @@ data/
 *.txt
 *.csv
 *.DS_Store
+*.edf
