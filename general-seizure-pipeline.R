@@ -1,11 +1,8 @@
-library(marp)
 library(stringr)
 library(lubridate)
 library(dplyr)
 library(edfReader)
 
-# read summary text
-txt <- readLines("data/seizure-data/chb15-summary.txt")
 
 # Parse seizure summary text into a data frame using arbitrary date
 parse_seizure_text <- function(txt, origin_date = "1970-01-01", tz = "UTC") {
@@ -99,7 +96,7 @@ parse_seizure_text <- function(txt, origin_date = "1970-01-01", tz = "UTC") {
       secs = vapply(end_lines, get_secs, integer(1)),
       stringsAsFactors = FALSE
     )
-    # Merge by seizure index if possible; if mismatch, we'll still record what's available
+    # Merge by seizure index if possible; if mismatch, record what's available
     se_df <- merge(starts, ends, by = "idx", all = TRUE, suffixes = c("_start", "_end"))
     se_df <- se_df[order(se_df$idx), ]
     
@@ -144,8 +141,6 @@ parse_seizure_text <- function(txt, origin_date = "1970-01-01", tz = "UTC") {
 }
 
 
-
-
 collapse_clusters <- function(df,
                               min_gap_sec,
                               within_file = TRUE) {
@@ -153,15 +148,15 @@ collapse_clusters <- function(df,
   if (!("global_end_sec" %in% names(df))) df$global_end_sec <- NA_real_
   
   # Order deterministically
-  df <- df %>%
+  df <- df |>
     arrange(file, global_start_sec, seizure_index)
   
   # Choose grouping key
   grp <- if (within_file) "file" else NULL
   
-  df_tag <- df %>%
-    group_by(across(all_of(grp))) %>%
-    arrange(global_start_sec, .by_group = TRUE) %>%
+  df_tag <- df |>
+    group_by(across(all_of(grp))) |>
+    arrange(global_start_sec, .by_group = TRUE) |>
     mutate(
       prev_end   = lag(global_end_sec),
       prev_start = lag(global_start_sec),
@@ -170,12 +165,12 @@ collapse_clusters <- function(df,
       # New cluster when no previous event or gap >= min_gap_sec
       new_event = if_else(is.na(gap) | gap >= min_gap_sec, 1L, 0L),
       event_id  = cumsum(new_event)
-    ) %>%
+    ) |>
     ungroup()
   
   # Summarise per cluster
-  out <- df_tag %>%
-    group_by(!!!rlang::syms(c(grp, "event_id"))) %>%
+  out <- df_tag |>
+    group_by(!!!rlang::syms(c(grp, "event_id"))) |>
     summarise(
       # Representative onset = earliest in cluster
       global_start_sec = min(global_start_sec, na.rm = TRUE),
@@ -187,76 +182,8 @@ collapse_clusters <- function(df,
       },
       n_seizures       = n(),
       .groups = "drop"
-    ) %>%
+    ) |>
     arrange(!!!rlang::syms(grp), global_start_sec, event_id)
   
   out
 }
-
-
-
-# Run the parser
-seizure_df <- parse_seizure_text(txt)
-print(head(seizure_df, 10))
-
-df_renewal <- collapse_clusters(seizure_df, min_gap_sec = 1800)
-
-
-# Or if you prefer numeric seconds since first file:
-global_secs1 <- seizure_df$global_start_sec
-dat1 <- diff(global_secs1)
-summary(dat1)
-hist(dat1)
-
-global_secs <- df_renewal$global_start_sec
-dat <- diff(global_secs)
-summary(dat)
-hist(dat, breaks=8)
-
-# set parameters
-m <- 50 # number of iterations for MLE optimization
-t <- seq(min(dat), max(dat), length.out = 8) # time intervals
-B <- 20 # number of bootstraps
-BB <- 10 # number of double-bootstrapps
-alpha <- 0.05 # confidence level
-y <- mean(dat) 
-# model_gen <- 2 # specifying the data generating model (if known)
-
-# step one: fitting differnt renewal models
-res1 <- marp::poisson_rp(dat,t,y)
-res2 <- marp::gamma_rp(dat,t,m,y)
-res3 <- marp::loglogis_rp(dat,t,m,y)
-res4 <- marp::weibull_rp(dat,t,m,y)
-res5 <- marp::lognorm_rp(dat,t,y)
-res6 <- marp::bpt_rp(dat,t,m,y)
-
-# step two: model selection and obtain model-averaged estimates
-res <- marp::marp(dat,t,m,y)
-res
-
-# step three: construct different confidence intervals (including model-averaged CIs)
-ci <- marp::marp_confint(dat,m,t,B,BB,alpha,y, 5)
-ci
-
-
-ggplot(seizure_df, aes(x = global_start_sec, y = 0)) +
-  geom_point(size = 3, color = "steelblue") +
-  geom_rug(sides = "b") +
-  labs(
-    title = "Seizure Onsets (Global Time)",
-    x = "Global Time (seconds since first file)",
-    y = NULL
-  ) +
-  theme_minimal()
-
-
-
-ggplot(df_renewal, aes(x = global_start_sec, y = 0)) +
-  geom_point(size = 3, color = "steelblue") +
-  geom_rug(sides = "b") +
-  labs(
-    title = "Seizure Onsets (Global Time)",
-    x = "Global Time (seconds since first file)",
-    y = NULL
-  ) +
-  theme_minimal()
