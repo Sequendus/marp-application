@@ -6,6 +6,7 @@ library(ggplot2)
 
 
 
+
 # ---- Helper: read EDF header start times once (cached) ----
 # Returns a named POSIXct vector: names == filenames (e.g., "chb24_01.edf")
 read_edf_starts <- function(edf_dir, files, tz = "UTC") {
@@ -151,14 +152,14 @@ parse_seizure_text_with_edf <- function(txt, edf_dir, tz = "UTC") {
   
   # Read EDF header start times once and join
   starts_vec <- read_edf_starts(edf_dir, df$file, tz = tz)  # POSIXct per file
-  df <- df %>%
+  df <- df |>
     mutate(file_start_time = starts_vec[file],
            global_start_time = file_start_time + seizure_start_sec,
            global_end_time   = ifelse(is.na(seizure_end_sec), NA, file_start_time + seizure_end_sec))
   
   # Derive seconds (epoch and relative)
   # epoch seconds (Unix) – useful if you want raw numeric timestamps:
-  df <- df %>%
+  df <- df |>
     mutate(
       file_start_epoch_sec   = as.numeric(file_start_time),
       global_start_epoch_sec = as.numeric(global_start_time),
@@ -168,7 +169,7 @@ parse_seizure_text_with_edf <- function(txt, edf_dir, tz = "UTC") {
   # Relative seconds since the first file start (only for rows with non-NA times)
   first_start <- suppressWarnings(min(df$file_start_time, na.rm = TRUE))
   if (is.finite(as.numeric(first_start))) {
-    df <- df %>%
+    df <- df |>
       mutate(
         global_start_sec = as.numeric(difftime(global_start_time, first_start, units = "secs")),
         global_end_sec   = as.numeric(difftime(global_end_time,   first_start, units = "secs"))
@@ -179,7 +180,7 @@ parse_seizure_text_with_edf <- function(txt, edf_dir, tz = "UTC") {
   }
   
   # Order by global start (if available), else by file and index
-  df <- df %>%
+  df <- df |>
     arrange(dplyr::desc(!is.na(global_start_sec)), global_start_sec, file, seizure_index)
   
   df
@@ -188,22 +189,22 @@ parse_seizure_text_with_edf <- function(txt, edf_dir, tz = "UTC") {
 
 
 
-collapse_clusters <- function(df,
+collapse_clusters_24 <- function(df,
                               min_gap_sec,
                               within_file = TRUE) {
   stopifnot(all(c("file", "global_start_sec") %in% names(df)))
   if (!("global_end_sec" %in% names(df))) df$global_end_sec <- NA_real_
   
   # Order deterministically
-  df <- df %>%
+  df <- df |>
     arrange(file, global_start_sec, seizure_index)
   
   # Choose grouping key
   grp <- if (within_file) "file" else NULL
   
-  df_tag <- df %>%
-    group_by(across(all_of(grp))) %>%
-    arrange(global_start_sec, .by_group = TRUE) %>%
+  df_tag <- df |>
+    group_by(across(all_of(grp))) |>
+    arrange(global_start_sec, .by_group = TRUE) |>
     mutate(
       prev_end   = lag(global_end_sec),
       prev_start = lag(global_start_sec),
@@ -212,12 +213,12 @@ collapse_clusters <- function(df,
       # New cluster when no previous event or gap >= min_gap_sec
       new_event = if_else(is.na(gap) | gap >= min_gap_sec, 1L, 0L),
       event_id  = cumsum(new_event)
-    ) %>%
+    ) |>
     ungroup()
   
   # Summarise per cluster
-  out <- df_tag %>%
-    group_by(!!!rlang::syms(c(grp, "event_id"))) %>%
+  out <- df_tag |>
+    group_by(!!!rlang::syms(c(grp, "event_id"))) |>
     summarise(
       # Representative onset = earliest in cluster
       global_start_sec = min(global_start_sec, na.rm = TRUE),
@@ -229,7 +230,7 @@ collapse_clusters <- function(df,
       },
       n_seizures       = n(),
       .groups = "drop"
-    ) %>%
+    ) |>
     arrange(!!!rlang::syms(grp), global_start_sec, event_id)
   
   out
@@ -257,7 +258,18 @@ ggplot(seizure_df, aes(x = global_start_sec, y = 0)) +
 
 
 
-df_renewal <- collapse_clusters(seizure_df, min_gap_sec = 1800)
+df_renewal <- collapse_clusters_24(seizure_df, min_gap_sec = 1800)
+
+
+ggplot(df_renewal, aes(x = global_start_sec, y = 0)) +
+  geom_point(size = 3, color = "steelblue") +
+  geom_rug(sides = "b") +
+  labs(
+    title = "Seizure Onsets (Global Time)",
+    x = "Global Time (seconds since first file)",
+    y = NULL
+  ) +
+  theme_minimal()
 
 head(seizure_df)
 head(df_renewal)
@@ -266,15 +278,21 @@ interarrival <- diff(df_renewal$global_start_sec)   # numeric vector of interarr
 hist(interarrival)
 
 dat <- interarrival
-dat
+
+library(marp)
+set.seed(2026)
 
 
 # set parameters
-m <- 50 # number of iterations for MLE optimization
-t <- seq(min(dat), max(dat), length.out = 15) # time intervals
-B <- 20 # number of bootstraps
-BB <- 10 # number of double-bootstrapps
-alpha <- 0.05 # confidence level
+m <- 80 # number of iterations for MLE optimization
+t <- seq(
+  quantile(dat, 0.2),
+  quantile(dat, 0.8),
+  length.out = 4
+) # time intervals
+B <- 200 # number of bootstraps
+BB <- 30 # number of double-bootstrapps
+alpha <- 0.1 # confidence level
 y <- mean(dat) 
 # model_gen <- 2 # specifying the data generating model (if known)
 
@@ -291,11 +309,7 @@ res <- marp::marp(dat,t,m,y)
 res
 
 # step three: construct different confidence intervals (including model-averaged CIs)
-ci <- marp::marp_confint(dat,m,t,B,BB,alpha,y, 6)
-
+ci <- marp::marp_confint(dat,m,t,B,BB,alpha,y, 2)
 ci
-
-summary(dat)
-
 
 
