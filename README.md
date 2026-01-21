@@ -1,4 +1,4 @@
-# R package `marp` Application (work in progress)
+# `marp` R package Application (work in progress)
 
 This repo contains scripts applying marp to real-world data, pipelines to transform said data and code for a simulation study to evaluate the methodology deployed by marp.
 
