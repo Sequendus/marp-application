@@ -11,7 +11,7 @@ This repo contains scripts applying marp to real-world data, pipelines to transf
   Demonstrating marp on fuller2 (airplane glass failure), CHB-MIT Scalp EEG Database (seizure) data. 
 
 - `pipelines/`  
-  Pipelines used to transform data into a format for marp.
+  Pipelines used to extract inter-event times from raw data format into a one usable for marp.
 
 - `simulations/`  
   Code for a simulation study to evaluate the methods in marp. 
