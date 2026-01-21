@@ -25,7 +25,3 @@ Seizure data: https://physionet.org/content/chbmit/1.0.0/
 
 Airplane glass data: https://datarepository.wolframcloud.com/resources/Sample-Data-Airplane-Glass/
 
-## Usage
-
-Run scripts from the project root, for example:
-
