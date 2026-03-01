@@ -114,7 +114,7 @@ hist(dat)
 
 # ==== graphs for paper ====
 
-pdf("loghaz_plot_seizure.pdf")
+pdf("graphs/loghaz_plot_seizure.pdf")
 
 # --- Empirical log-hazard ---
 
