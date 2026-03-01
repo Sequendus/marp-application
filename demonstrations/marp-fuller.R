@@ -5,7 +5,7 @@ library(dplyr)
 library(edfReader)
 library(tidyverse)
 
-# Run this in a different R session (so completely different environment) from marp-seizure.R
+# Run this in a different R session (so new empty environment) from marp-seizure.R
 
 data_fuller <- read.table("data/FULLER2.DAT", skip = 25)
 
