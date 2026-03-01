@@ -131,15 +131,6 @@ legend("topleft",
 dev.off()
 
 
-length(t)
-length(lower)
-length(upper)
-
-
-
-
-
-
 # ------Confidence intervals graph---------------
 
 pdf("graphs/CI_plot_fuller.pdf")
