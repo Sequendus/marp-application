@@ -47,7 +47,7 @@ res
 
 # == Placeholder histogram graph==
 
-pdf("graphs/multipanel_figure.pdf")
+pdf("figures/multipanel_figure.pdf")
 par(mfrow = c(2, 2))
 
 
@@ -86,7 +86,7 @@ dev.off()
 
 # --- Empirical log-hazard vs estimates graph---
 
-pdf("graphs/loghaz_plot_fuller.pdf")
+pdf("figures/loghaz_plot_fuller.pdf")
 
 # 1) KDE for f(t); ensure coverage across t to avoid NA from extrapolation
 d <- density(dat, from = min(t), to = max(t))
@@ -133,7 +133,7 @@ dev.off()
 
 # ------Confidence intervals graph---------------
 
-pdf("graphs/CI_plot_fuller.pdf")
+pdf("figures/CI_plot_fuller.pdf")
 
 # Extract series
 haz   <- res$haz_aic
@@ -176,8 +176,8 @@ dev.off()
 
 
 # Save R objects
-saveRDS(res, "results/res_fuller.rds")
-saveRDS(ci,  "results/ci_fuller.rds")
+saveRDS(res, "results/fuller-airplane-glass/res_fuller.rds")
+saveRDS(ci,  "results/fuller-airplane-glass/ci_fuller.rds")
 
 # Save CSV summaries
 model_summary <- data.frame(
@@ -191,7 +191,7 @@ model_summary <- data.frame(
   mu_hat = res$mu_hat,
   pr_hat = res$pr_hat
 )
-write.csv(model_summary, "results/model_summary_fuller.csv", row.names = FALSE)
+write.csv(model_summary, "results/fuller-airplane-glass/model_summary_fuller.csv", row.names = FALSE)
 
 haz_summary <- data.frame(
   quantile      = c("10%", "23.3%", "36.7%", "50%", "63.3%", "76.7%", "90%"),
@@ -201,4 +201,4 @@ haz_summary <- data.frame(
   haz_lower_ma  = ci$student_CI$haz_lower_ma,
   haz_upper_ma  = ci$student_CI$haz_upper_ma
 )
-write.csv(haz_summary, "results/haz_summary_fuller.csv", row.names = FALSE)
+write.csv(haz_summary, "results/fuller-airplane-glass/haz_summary_fuller.csv", row.names = FALSE)
