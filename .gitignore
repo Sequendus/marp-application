@@ -2,11 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
-data/
 *.txt
-*.csv
 *.DS_Store
-*.edf
 *.Rproj
-*.DAT
-*.pdf
