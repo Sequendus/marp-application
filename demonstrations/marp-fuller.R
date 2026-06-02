@@ -19,8 +19,8 @@ hist(dat, prob = TRUE)
 # set parameters
 m <- 100 # number of iterations for MLE optimization
 t <- quantile(dat, probs = seq(0.1, 0.9, length.out = 7))
-B <- 20 # number of bootstraps use 1000 for paper
-BB <- 20 # number of double-bootstrapps use 200 for paper
+B <- 99 # number of bootstraps 
+BB <- 99 # number of double-bootstraps 
 alpha <- 0.05 # confidence level
 y <- mean(dat) 
 # model_gen <- 2 # specifying the data generating model (if known)
@@ -173,3 +173,32 @@ legend("topleft",
        bty    = "n")
 
 dev.off()
+
+
+# Save R objects
+saveRDS(res, "results/res_fuller.rds")
+saveRDS(ci,  "results/ci_fuller.rds")
+
+# Save CSV summaries
+model_summary <- data.frame(
+  model  = c("Poisson", "Gamma", "LogLogistic", "Weibull", "LogNormal", "BPT"),
+  par1   = res$par1,
+  par2   = c(NA, res$par2[-1]),
+  logL   = res$logL,
+  AIC    = res$AIC,
+  BIC    = res$BIC,
+  weight = res$weights_AIC,
+  mu_hat = res$mu_hat,
+  pr_hat = res$pr_hat
+)
+write.csv(model_summary, "results/model_summary_fuller.csv", row.names = FALSE)
+
+haz_summary <- data.frame(
+  quantile      = c("10%", "23.3%", "36.7%", "50%", "63.3%", "76.7%", "90%"),
+  t             = t,
+  haz_best      = res$haz_best,
+  haz_aic       = res$haz_aic,
+  haz_lower_ma  = ci$student_CI$haz_lower_ma,
+  haz_upper_ma  = ci$student_CI$haz_upper_ma
+)
+write.csv(haz_summary, "results/haz_summary_fuller.csv", row.names = FALSE)
