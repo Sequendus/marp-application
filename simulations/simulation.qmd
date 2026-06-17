@@ -48,16 +48,16 @@ n_vec <- c(20, 50, 100)
 R_sim <- 30
 t_vec <- c(150, 200)
 
-# CI simulation
-n_vec_ci <- c(50, 100)
-R_sim_ci <- 20
-B <- 99
-BB <- 99
-t_vec_ci <- c(150, 200)
+# # CI simulation
+# n_vec_ci <- c(50, 100)
+# R_sim_ci <- 20
+# B <- 99
+# BB <- 99
+# t_vec_ci <- c(150, 200)
 
-alpha <- 0.05
-m <- 10
-y <- 304
+# alpha <- 0.05
+# m <- 10
+# y <- 304
 
 # MARP model index:
 # 1 = Poisson
@@ -857,7 +857,6 @@ ggsave(
 )
 ```
 
-
 ```{r}
 error_data <- results_point_clean %>%
   filter(!is.na(estimate), !is.na(true)) %>%
@@ -931,7 +930,7 @@ ggsave(
 ```
 
 ```{r}
-dir.create("simulation_outputs", showWarnings = FALSE)
+#dir.create("simulation_outputs", showWarnings = FALSE)
 
 write.csv(
   point_summary,
@@ -957,4 +956,3 @@ write.csv(
   row.names = FALSE
 )
 ```
-

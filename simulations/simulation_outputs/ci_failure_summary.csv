@@ -1,0 +1,7 @@
+"scenario","n","total_reps","ci_failures","ci_failure_rate","example_errors"
+"S1_Gamma_well_specified",50,20,0,0,""
+"S1_Gamma_well_specified",100,20,0,0,""
+"S2_Weibull_challenging",50,20,0,0,""
+"S2_Weibull_challenging",100,20,2,0.1,"missing value where TRUE/FALSE needed |  | f.lower = f(lower) is NA"
+"S3_Mixture_misspecified",50,20,0,0,""
+"S3_Mixture_misspecified",100,20,0,0,""

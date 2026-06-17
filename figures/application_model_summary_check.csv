@@ -1,0 +1,13 @@
+dataset,model,AIC,delta_AIC,weight
+Airplane glass data,BPT,271.11,0,0.315
+Airplane glass data,Log-normal,271.53,0.43,0.255
+Airplane glass data,Gamma,272.24,1.13,0.179
+Airplane glass data,Log-logistic,272.89,1.79,0.129
+Airplane glass data,Weibull,273.1,2,0.116
+Airplane glass data,Poisson,279.07,7.96,0.006
+Seizure data,BPT,271.11,0,0.315
+Seizure data,Log-normal,271.53,0.43,0.255
+Seizure data,Gamma,272.24,1.13,0.179
+Seizure data,Log-logistic,272.89,1.79,0.129
+Seizure data,Weibull,273.1,2,0.116
+Seizure data,Poisson,279.07,7.96,0.006
